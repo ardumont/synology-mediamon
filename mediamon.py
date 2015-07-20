@@ -1,4 +1,4 @@
-# /root/mediamon.py
+# /root/bin/mediamon.py
 from datetime import datetime
 
 import ConfigParser

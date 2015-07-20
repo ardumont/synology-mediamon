@@ -4,7 +4,7 @@
 case "$1" in
   start|"")
     #start the monitoring daemon
-    python /root/mediamon.py
+    python /root/bin/mediamon.py
     ;;
   restart|reload|force-reload)
     echo "Error: argument '$1' not supported" >&2
