@@ -3,7 +3,8 @@ MediaMon
 
 File monitor and auto-indexer for Synology DiskStation NAS.
 
-I'm using this on a DS213j, but I expect it may work on other models as well.
+I'm using this on a DS213j, but I expect it may work on other models
+as well (DS214+ was reported successfully for one).
 
 
 Usage
