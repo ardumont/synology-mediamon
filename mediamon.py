@@ -94,7 +94,7 @@ class EventHandler(pyinotify.ProcessEvent):
             self.modified_files.add(event.pathname)
 
     def process_IN_CLOSE_WRITE(self, event):
-        # ignore close_write unlesss the file has previously been modified.
+        # ignore close_write unless the file has previously been modified.
         if (event.pathname in self.modified_files):
             self.do_index_command(event, "-a")
 
