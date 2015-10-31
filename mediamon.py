@@ -4,6 +4,7 @@ from datetime import datetime
 import ConfigParser
 import os.path
 import pyinotify
+import re
 import signal
 import sys
 
@@ -17,7 +18,8 @@ CONFIG_DEFAULT = {
     'pidfile': '/var/run/mediamon.pid',
     'watched_paths': '/volume1/music /volume1/photo /volume1/video',
     'allowed_exts': 'jpg jpeg png tga gif bmp mp3 flac aac wma ogg ogv '
-                    'mp4 avi m4v'
+                    'mp4 avi m4v',
+    'exclude_dir_patterns': '@eaDir .sync'
 }
 
 def read_configuration(config_path=None):
@@ -47,12 +49,16 @@ def read_configuration(config_path=None):
     config['watched_paths'] = config['watched_paths'].split(' ')
     config['allowed_exts'] = set(config['allowed_exts'].split(' '))
 
+    pattern = '|'.join(config['exclude_dir_patterns'].split(' '))
+    config['exclude_dir_patterns'] = re.compile(pattern)
+
     return config
 
 config = read_configuration(CONFIG_PATH)
 
 watched_paths = config['watched_paths']
 allowed_exts = config['allowed_exts']
+exclude_dir_patterns = config['exclude_dir_patterns']
 
 log_file = open(config['logfile'], "a")
 
@@ -139,7 +145,7 @@ class EventHandler(pyinotify.ProcessEvent):
             ext = os.path.splitext(filename)[1][1:].lower()
             if ext not in allowed_exts:
                 return False
-        return not (filename.find("@eaDir") > 0)
+        return not exclude_dir_patterns.findall(filename)
 
 handler = EventHandler()
 notifier = pyinotify.Notifier(wm, handler)
