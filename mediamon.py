@@ -113,9 +113,7 @@ class EventHandler(pyinotify.ProcessEvent):
             ext = os.path.splitext(filename)[1][1:].lower()
             if ext not in allowed_exts:
                 return False
-        if filename.find("@eaDir") > 0:
-            return False
-        return True
+        return not (filename.find("@eaDir") > 0)
 
 handler = EventHandler()
 notifier = pyinotify.Notifier(wm, handler)
