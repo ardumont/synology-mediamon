@@ -35,6 +35,19 @@ Usage
    that it's working. You should see a ``synoindex -a`` entry for each added
    file.
 
+Note: To change the default watched folders, you can add
+/etc/mediamon/mediamon.ini (adapt to your needs):
+
+[main]
+
+# logging file
+logfile = /var/log/mediamon.log
+# pid file
+pidfile = /var/run/mediamon.pid
+# list of space separated paths to watch
+watched_paths = /volume1/video /volume1/tech-conf /volume1/foobar
+# list of space separated allowed extensions
+allowed_exts = jpg jpeg png tga gif bmp ogg ogv mp4 avi m4v
 
 Caveats
 -------
