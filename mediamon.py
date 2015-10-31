@@ -1,4 +1,3 @@
-# /root/bin/mediamon.py
 from datetime import datetime
 
 import ConfigParser
@@ -23,34 +22,65 @@ CONFIG_DEFAULT = {
 }
 
 def read_configuration(config_path=None):
-    # read from file or set the default configuration file
-    if config_path and os.path.exists(config_path):
-        # Expects an optional config_path configuration file of the form:
-        # [main]
-        #
-        # logging file
-        # logfile = /var/log/mediamon.log
-        #
-        # pid file
-        # pidfile = /var/run/mediamon.pid
-        #
-        # list of space separated paths to watch
-        # watched_paths = /volume1/techconf /volume1/musics /volume1/pix
-        #
-        # list of space separated allowed extensions
-        # allowed_exts = jpg png gif bmp mp3 flac aac wma ogg ogv mp4 avi m4v
+    """Read from file or set the default configuration file.
 
+    Args:
+        config_path: a path to a configuration file.
+
+    Returns:
+        A dictionary that represents the configuration with the keys:
+        - watched_paths: paths to watch
+        - allowed_exts: extensions allowed
+        - exclude_dir_patterns: folder to avoid watching even on watched_paths
+        - logfile: where to log event
+        - pidfile: where to store the pid
+
+    """
+    def compute(entry):
+        """Compute entry as list of words.
+        Words are stripped.
+        Args:
+            entry: string of space separated words
+
+        Returns:
+            List of entries.
+
+        """
+        if entry:
+            return map(lambda x: x.strip(), entry.split(' '))
+        return []
+
+    def compute_exclude_pattern(exclude_pattern):
+        """Compute exclusion patterns from simple words.
+        Those words represents generic folder name (e.g. @eaDir,
+        .sync, .stfolder)
+
+        Args:
+            exclude_pattern: string of words
+
+        Returns:
+            List of regexp patterns.
+
+        """
+        if exclude_pattern:
+            folder_patterns = exclude_pattern.split(' ')
+            return list(
+                map(lambda x: '.*/' + x.strip().replace('.', '\.') + '.*',
+                    folder_patterns))
+        return []
+
+    if config_path and os.path.exists(config_path):
         confparser = ConfigParser.ConfigParser()
         confparser.read(config_path)
         config = confparser._sections['main']
     else:  # default one based on original code
         config = CONFIG_DEFAULT
 
-    config['watched_paths'] = config['watched_paths'].split(' ')
-    config['allowed_exts'] = set(config['allowed_exts'].split(' '))
+    config['watched_paths'] = compute(config.get('watched_paths'))
+    config['allowed_exts'] = set(compute(config.get('allowed_exts')))
 
-    pattern = '|'.join(config['exclude_dir_patterns'].split(' '))
-    config['exclude_dir_patterns'] = re.compile(pattern)
+    config['exclude_dir_patterns'] = compute_exclude_pattern(
+        config.get('exclude_dir_patterns'))
 
     return config
 
@@ -144,16 +174,19 @@ class EventHandler(pyinotify.ProcessEvent):
         if not is_dir:
             ext = os.path.splitext(filename)[1][1:].lower()
             return ext in allowed_exts
-        return not exclude_dir_patterns.findall(filename)
+        return True
 
 handler = EventHandler()
 notifier = pyinotify.Notifier(wm, handler)
+
+excl_pattern = pyinotify.ExcludeFilter(config['exclude_dir_patterns'])
+
 wdd = wm.add_watch(
     watched_paths,
     mask,
     rec=True,
     auto_add=True,
-)
+    exclude_filter=excl_pattern)
 
 try:
     notifier.loop(daemonize=True, pid_file=config['pidfile'])
