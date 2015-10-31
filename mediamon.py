@@ -1,14 +1,35 @@
 # /root/mediamon.py
 from datetime import datetime
+
+import ConfigParser
 import os.path
-import sys
-from subprocess import call
-import signal
-
 import pyinotify
+import signal
+import sys
 
+from datetime import datetime
+from subprocess import call
 
-log_file = open("/var/log/mediamon.log", "a")
+conf_file = '/etc/mediamon/mediamon.ini'
+config_path = os.path.expanduser(conf_file)
+
+if os.path.exists(config_path):
+    confparser = ConfigParser.ConfigParser()
+    confparser.read(config_path)
+    config = confparser._sections['main']
+else:  # default one based on original code
+    config = {
+        'logfile': '/var/log/mediamon.log',
+        'pidfile': '/var/run/mediamon.pid',
+        'watched_paths': '/volume1/music /volume1/photo /volume1/video',
+        'allowed_exts': 'jpg jpeg png tga gif bmp mp3 flac aac wma ogg ogv '
+                        'mp4 avi m4v'
+    }
+
+watched_paths = config['watched_paths'].split(' ')
+allowed_exts = set(config['allowed_exts'].split(' '))
+
+log_file = open(config['logfile'], "a")
 
 
 def log(text):
@@ -25,26 +46,6 @@ def signal_handler(signal, frame):
 log("Starting")
 
 signal.signal(signal.SIGTERM, signal_handler)
-
-watched_paths = ["/volume1/music", "/volume1/photo", "/volume1/video"]
-
-allowed_exts = {
-    "jpg",
-    "jpeg",
-    "png",
-    "tga",
-    "gif",
-    "bmp",
-    "mp3",
-    "flac",
-    "aac",
-    "wma",
-    "ogg",
-    "ogv",
-    "mp4",
-    "avi",
-    "m4v",
-}
 
 wm = pyinotify.WatchManager()
 mask = (
@@ -125,6 +126,6 @@ wdd = wm.add_watch(
 )
 
 try:
-    notifier.loop(daemonize=True, pid_file='/var/run/mediamon.pid')
+    notifier.loop(daemonize=True, pid_file=config['pidfile'])
 except pyinotify.NotifierError, err:
     print >> sys.stderr, err
