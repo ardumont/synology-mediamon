@@ -10,24 +10,49 @@ import sys
 from datetime import datetime
 from subprocess import call
 
-conf_file = '/etc/mediamon/mediamon.ini'
-config_path = os.path.expanduser(conf_file)
+CONFIG_PATH = '/etc/mediamon/mediamon.ini'
 
-if os.path.exists(config_path):
-    confparser = ConfigParser.ConfigParser()
-    confparser.read(config_path)
-    config = confparser._sections['main']
-else:  # default one based on original code
-    config = {
-        'logfile': '/var/log/mediamon.log',
-        'pidfile': '/var/run/mediamon.pid',
-        'watched_paths': '/volume1/music /volume1/photo /volume1/video',
-        'allowed_exts': 'jpg jpeg png tga gif bmp mp3 flac aac wma ogg ogv '
-                        'mp4 avi m4v'
-    }
+CONFIG_DEFAULT = {
+    'logfile': '/var/log/mediamon.log',
+    'pidfile': '/var/run/mediamon.pid',
+    'watched_paths': '/volume1/music /volume1/photo /volume1/video',
+    'allowed_exts': 'jpg jpeg png tga gif bmp mp3 flac aac wma ogg ogv '
+                    'mp4 avi m4v'
+}
 
-watched_paths = config['watched_paths'].split(' ')
-allowed_exts = set(config['allowed_exts'].split(' '))
+def read_configuration(config_path=None):
+    # read from file or set the default configuration file
+    if config_path and os.path.exists(config_path):
+        # Expects an optional config_path configuration file of the form:
+        # [main]
+        #
+        # logging file
+        # logfile = /var/log/mediamon.log
+        #
+        # pid file
+        # pidfile = /var/run/mediamon.pid
+        #
+        # list of space separated paths to watch
+        # watched_paths = /volume1/techconf /volume1/musics /volume1/pix
+        #
+        # list of space separated allowed extensions
+        # allowed_exts = jpg png gif bmp mp3 flac aac wma ogg ogv mp4 avi m4v
+
+        confparser = ConfigParser.ConfigParser()
+        confparser.read(config_path)
+        config = confparser._sections['main']
+    else:  # default one based on original code
+        config = CONFIG_DEFAULT
+
+    config['watched_paths'] = config['watched_paths'].split(' ')
+    config['allowed_exts'] = set(config['allowed_exts'].split(' '))
+
+    return config
+
+config = read_configuration(CONFIG_PATH)
+
+watched_paths = config['watched_paths']
+allowed_exts = config['allowed_exts']
 
 log_file = open(config['logfile'], "a")
 
