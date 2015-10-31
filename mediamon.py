@@ -13,7 +13,7 @@ log_file = open("/var/log/mediamon.log", "a")
 
 def log(text):
     dt = datetime.utcnow().isoformat()
-    log_file.write(dt + ' - ' + text + "\n")
+    log_file.write(''.join([dt, ' - ', text, '\n']))
     log_file.flush()
 
 
