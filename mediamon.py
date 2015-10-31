@@ -143,8 +143,7 @@ class EventHandler(pyinotify.ProcessEvent):
         # Don't check the extension for directories
         if not is_dir:
             ext = os.path.splitext(filename)[1][1:].lower()
-            if ext not in allowed_exts:
-                return False
+            return ext in allowed_exts
         return not exclude_dir_patterns.findall(filename)
 
 handler = EventHandler()
