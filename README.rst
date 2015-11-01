@@ -49,6 +49,9 @@ pidfile = /var/run/mediamon.pid
 watched_paths = /volume1/video /volume1/tech-conf /volume1/foobar
 # list of space separated allowed extensions
 allowed_exts = jpg jpeg png tga gif bmp ogg ogv mp4 avi m4v
+# excluded pattern filter
+exclude_dir_patterns = @eaDir .sync .stfolder
+
 
 Caveats
 -------
